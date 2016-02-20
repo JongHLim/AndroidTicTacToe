@@ -45,10 +45,16 @@ public class TicTacToeGame {
     }//end clearBoard method
 
 
-    public void setMove(char player, int location){
+    public char getBoardOccupant(int pos) {
+        return mBoard[pos];
+    }
+
+    public boolean setMove(char player, int location){
         if(mBoard[location] == OPEN_SPOT){
             mBoard[location]=player;
+            return true;
         }//end if
+        return false;
     }//end setMove method
 
     // Check for a winner.  Return
