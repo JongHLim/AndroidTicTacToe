@@ -12,4 +12,8 @@
         android:title="Quit"
         android:icon="@drawable/quit_game"
         AndroidTicTacToe:showAsAction="always"/>
+    <item android:id="@+id/reset_scores"
+        android:title="Reset Scores"
+        android:icon="@drawable/reset_scores"
+        AndroidTicTacToe:showAsAction="always"/>
 </menu>

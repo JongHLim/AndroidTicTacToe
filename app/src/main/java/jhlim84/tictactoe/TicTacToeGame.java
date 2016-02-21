@@ -37,6 +37,15 @@ public class TicTacToeGame {
         mRand = new Random();
     }//end Constructor
 
+    public char[] getBoardState() {
+        return mBoard;
+    }
+
+    public void setBoardState(char[] savedBoard) {
+        for (int index = 0; index < mBoard.length; index++)
+            mBoard[index] = savedBoard[index];
+    }
+
 //OTHER METHODS:
     public void clearBoard(){
         for(int i = 0; i < BOARD_SIZE; i++){

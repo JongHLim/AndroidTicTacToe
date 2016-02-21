@@ -3,6 +3,7 @@ package jhlim84.tictactoe;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.support.v7.app.ActionBarActivity;
@@ -38,6 +39,7 @@ public class AndroidTicTacToe extends ActionBarActivity {
 
     // Whose turn to go first
     private char mTurn = TicTacToeGame.COMPUTER_PLAYER;
+    private char mGoesFirst = TicTacToeGame.HUMAN_PLAYER;
 
     // Buttons making up the board
     private Button mBoardButtons[];
@@ -53,6 +55,8 @@ public class AndroidTicTacToe extends ActionBarActivity {
     private int mComputerWins = 0;
     private int mTies = 0;
 
+    private SharedPreferences mPrefs;
+
     static final int DIALOG_DIFFICULTY_ID = 0;
     static final int DIALOG_QUIT_ID = 1;
 
@@ -62,10 +66,18 @@ public class AndroidTicTacToe extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        mPrefs = getSharedPreferences("ttt_prefs", MODE_PRIVATE);
+        // Restore the scores
+        mHumanWins = mPrefs.getInt("mHumanWins", 0);
+        mComputerWins = mPrefs.getInt("mComputerWins", 0);
+        mTies = mPrefs.getInt("mTies", 0);
+
         mInfoTextView = (TextView) findViewById(R.id.information);
         mHumanScoreTextView = (TextView) findViewById(R.id.player_score);
         mComputerScoreTextView = (TextView) findViewById(R.id.computer_score);
         mTieScoreTextView = (TextView) findViewById(R.id.tie_score);
+
+        displayScores();
 
         mGame = new TicTacToeGame();
         mBoardView = (BoardView) findViewById(R.id.board);
@@ -73,8 +85,36 @@ public class AndroidTicTacToe extends ActionBarActivity {
         // Listen for touches on the board
         mBoardView.setOnTouchListener(mTouchListener);
 
-        startNewGame();
-    }//end onCreate override method
+        if (savedInstanceState == null) {
+//            mTurn = TicTacToeGame.HUMAN_PLAYER;
+//            mGoesFirst = TicTacToeGame.COMPUTER_PLAYER; // computer goes fist next game
+            startNewGame();
+        } else {
+            mGame.setBoardState(savedInstanceState.getCharArray("board"));
+            mGameOver = savedInstanceState.getBoolean("mGameOver");
+            mTurn = savedInstanceState.getChar("mTurn");
+            mGoesFirst = savedInstanceState.getChar("mGoesFirst");
+            mInfoTextView.setText(savedInstanceState.getCharSequence("info"));
+            mHumanWins = savedInstanceState.getInt("mHumanWins");
+            mComputerWins = savedInstanceState.getInt("mComputerWins");
+            mTies = savedInstanceState.getInt("mTies");
+            displayScores();
+        }
+    }
+
+    private void displayScores() {
+        mHumanScoreTextView.setText(Integer.toString(mHumanWins));
+        mComputerScoreTextView.setText(Integer.toString(mComputerWins));
+        mTieScoreTextView.setText(Integer.toString(mTies));
+    }
+
+    private void startComputerDelay() {
+    // If it's the computer's turn, the previous turn was not completed, so try again
+        if (!mGameOver && mTurn == TicTacToeGame.COMPUTER_PLAYER) {
+            int move = mGame.getComputerMove();
+            setMove(TicTacToeGame.COMPUTER_PLAYER, move);
+        }
+    }
 
     protected Dialog onCreateDialog(int id) {
         Dialog dialog = null;
@@ -154,6 +194,11 @@ public class AndroidTicTacToe extends ActionBarActivity {
             case R.id.quit:
                 showDialog(DIALOG_QUIT_ID);
                 return true;
+            case R.id.reset_scores:
+                mHumanWins = 0;
+                mTies = 0;
+                mComputerWins = 0;
+                displayScores();
         }
         return false;
     }
@@ -174,7 +219,6 @@ public class AndroidTicTacToe extends ActionBarActivity {
         //clears the internal representation of the game:
         mGame.clearBoard();
 
-        mGame.clearBoard();
         mBoardView.invalidate(); // Leads to a redraw of the board view
 
         // Alternate who goes first
@@ -271,9 +315,9 @@ public class AndroidTicTacToe extends ActionBarActivity {
 // 2 = maximum sounds ot play at the same time,
 // AudioManager.STREAM_MUSIC is the stream type typically used for games
 // 0 is the "the sample-rate converter quality. Currently has no effect. Use 0 for the default."
-        mHumanMoveSoundID = mSounds.load(this, R.raw.human_move, 1);
+        mHumanMoveSoundID = mSounds.load(this, R.raw.o_sound, 1);
 // Context, id of resource, priority (currently no effect)
-        mComputerMoveSoundID = mSounds.load(this, R.raw.computer_move, 1);
+        mComputerMoveSoundID = mSounds.load(this, R.raw.x_sound, 1);
 
         mComputerWinSoundID = mSounds.load(this, R.raw.computer_win, 1);
 // Context, id of resource, priority (currently no effect)
@@ -289,6 +333,32 @@ public class AndroidTicTacToe extends ActionBarActivity {
             mSounds.release();
             mSounds = null;
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putCharArray("board", mGame.getBoardState());
+        outState.putBoolean("mGameOver", mGameOver);
+        outState.putInt("mHumanWins", Integer.valueOf(mHumanWins));
+        System.out.println("DEBUG *** Human Wins: " + Integer.valueOf(mHumanWins));
+        outState.putInt("mComputerWins", Integer.valueOf(mComputerWins));
+        outState.putInt("mTies", Integer.valueOf(mTies));
+        outState.putCharSequence("info", mInfoTextView.getText());
+        outState.putChar("mTurn", mTurn);
+        outState.putChar("mGoesFirst", mGoesFirst);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        // Save the current scores
+        SharedPreferences.Editor ed = mPrefs.edit();
+        ed.putInt("mHumanWins", mHumanWins);
+        ed.putInt("mComputerWins", mComputerWins);
+        ed.putInt("mTies", mTies);
+        ed.apply();
     }
 
 }
