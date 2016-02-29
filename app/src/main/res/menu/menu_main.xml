@@ -4,9 +4,13 @@
         android:title="New Game"
         android:icon="@drawable/new_game"
         AndroidTicTacToe:showAsAction="always"/>
-    <item android:id="@+id/ai_difficulty"
-        android:title="Difficulty"
-        android:icon="@drawable/difficulty_level"
+    <!--<item android:id="@+id/ai_difficulty"-->
+        <!--android:title="Difficulty"-->
+        <!--android:icon="@drawable/difficulty_level"-->
+        <!--AndroidTicTacToe:showAsAction="always"/>-->
+    <item android:id="@+id/settings"
+        android:title="Settings"
+        android:icon="@drawable/settings"
         AndroidTicTacToe:showAsAction="always"/>
     <item android:id="@+id/quit"
         android:title="Quit"
